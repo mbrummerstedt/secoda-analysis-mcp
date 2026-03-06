@@ -1,13 +1,12 @@
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 
-from prompt import MCP_PROMPT
-from tools.search import register_tools as register_search_tools
-from tools.entity import register_tools as register_entity_tools
-from tools.resources import register_tools as register_resource_tools
-from tools.collections import register_tools as register_collection_tools
-from tools.questions import register_tools as register_question_tools
-from tools.ai_chat import register_tools as register_ai_chat_tools
-
+from .prompt import MCP_PROMPT
+from .tools.ai_chat import register_tools as register_ai_chat_tools
+from .tools.collections import register_tools as register_collection_tools
+from .tools.entity import register_tools as register_entity_tools
+from .tools.questions import register_tools as register_question_tools
+from .tools.resources import register_tools as register_resource_tools
+from .tools.search import register_tools as register_search_tools
 
 # --------------------------------
 # Initialize MCP Server
@@ -26,7 +25,7 @@ mcp = FastMCP(
 # Search tools (semantic search across data assets and documentation)
 register_search_tools(mcp)
 
-# Entity and utility tools (retrieve, lineage, glossary, SQL)
+# Entity and utility tools (retrieve, lineage, glossary)
 register_entity_tools(mcp)
 
 # Resource browsing tools (list + get, read-only)
@@ -43,8 +42,14 @@ register_ai_chat_tools(mcp)
 
 
 # --------------------------------
-# Run Server
+# Entrypoint
 # --------------------------------
 
-if __name__ == "__main__":
+
+def main() -> None:
+    """Run the MCP server."""
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

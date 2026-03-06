@@ -1,11 +1,11 @@
 import json
 from typing import Annotated, Optional
 
+from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
-from core.client import _make_request_with_retry, _truncate_response
-from core.config import API_TOKEN, API_URL
-
+from ..core.client import _make_request_with_retry, _truncate_response
+from ..core.config import API_TOKEN, API_URL
 
 # --------------------------------
 # Question Read Tools
@@ -13,9 +13,9 @@ from core.config import API_TOKEN, API_URL
 
 
 def list_questions(
-    page: Annotated[float, Field(ge=1, description="Page number for pagination")] = 1,
+    page: Annotated[int, Field(ge=1, description="Page number for pagination")] = 1,
     truncate_length: Annotated[
-        Optional[float], Field(ge=1, description="Maximum characters for text fields in results")
+        Optional[int], Field(ge=1, description="Maximum characters for text fields in results")
     ] = 150,
 ) -> str:
     """List all questions in the workspace.
@@ -30,11 +30,8 @@ def list_questions(
 
     Returns:
         List of questions with text fields truncated to specified length
-    """
-    page = int(page)
-    if truncate_length is not None:
-        truncate_length = int(truncate_length)
 
+    """
     api_url = API_URL if API_URL.endswith("/") else f"{API_URL}/"
 
     response = _make_request_with_retry(
@@ -50,11 +47,13 @@ def list_questions(
         return json.dumps(
             {"error": "Rate limit exceeded after 2 retries. Please wait before trying again."}
         )
-    elif response.status_code == 403:
+    if response.status_code == 403:
         return json.dumps(
-            {"error": "Permission denied. Check that your API token has permission to list questions."}
+            {
+                "error": "Permission denied. Check that your API token has permission to list questions."
+            }
         )
-    elif response.status_code >= 400:
+    if response.status_code >= 400:
         try:
             error_detail = response.json()
             return json.dumps({"error": f"Request failed: {error_detail}"})
@@ -74,7 +73,7 @@ def list_questions(
 def get_question(
     question_id: Annotated[str, Field(description="The unique identifier of the question")],
     truncate_length: Annotated[
-        Optional[float], Field(ge=1, description="Maximum characters for text fields in results")
+        Optional[int], Field(ge=1, description="Maximum characters for text fields in results")
     ] = 150,
 ) -> str:
     """Retrieve a specific question and its answer by ID.
@@ -89,10 +88,8 @@ def get_question(
 
     Returns:
         Question details including title, description, and answers
-    """
-    if truncate_length is not None:
-        truncate_length = int(truncate_length)
 
+    """
     api_url = API_URL if API_URL.endswith("/") else f"{API_URL}/"
 
     response = _make_request_with_retry(
@@ -107,15 +104,17 @@ def get_question(
         return json.dumps(
             {"error": "Rate limit exceeded after 2 retries. Please wait before trying again."}
         )
-    elif response.status_code == 404:
+    if response.status_code == 404:
         return json.dumps(
             {"error": f"Question not found. The question ID '{question_id}' does not exist."}
         )
-    elif response.status_code == 403:
+    if response.status_code == 403:
         return json.dumps(
-            {"error": "Permission denied. Check that your API token has permission to access questions."}
+            {
+                "error": "Permission denied. Check that your API token has permission to access questions."
+            }
         )
-    elif response.status_code >= 400:
+    if response.status_code >= 400:
         try:
             error_detail = response.json()
             return json.dumps({"error": f"Request failed: {error_detail}"})
@@ -137,7 +136,7 @@ def get_question(
 # --------------------------------
 
 
-def register_tools(mcp):
+def register_tools(mcp: FastMCP) -> None:
     """Register read-only question tools with the MCP server."""
     mcp.tool()(list_questions)
     mcp.tool()(get_question)

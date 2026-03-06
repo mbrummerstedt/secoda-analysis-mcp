@@ -1,12 +1,14 @@
 import json
 import time
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 import requests
+from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from core.config import API_TOKEN, EAPI_BASE_URL
-
+from ..core.config import AI_PERSONA_ID as _DEFAULT_PERSONA_ID
+from ..core.config import API_TOKEN, EAPI_BASE_URL
 
 # --------------------------------
 # Internal Helpers
@@ -17,15 +19,15 @@ def _submit_prompt(
     prompt: str,
     parent: Optional[str] = None,
     persona_id: Optional[str] = None,
-) -> dict:
-    """
-    POST to /ai/embedded_prompt/ and return the response dict.
+) -> dict[str, Any]:
+    """POST to /ai/embedded_prompt/ and return the response dict.
 
     Raises:
         RuntimeError: If the request fails or no chat ID is returned.
+
     """
     url = f"{EAPI_BASE_URL}/ai/embedded_prompt/"
-    payload = {
+    payload: dict = {
         "prompt": prompt,
         "parent": parent,
         "user_generated": True,
@@ -66,15 +68,15 @@ def _submit_prompt(
                     detail = response.text
                 raise RuntimeError(f"Request failed with status {response.status_code}: {detail}")
 
-            data = response.json()
+            data: dict[str, Any] = response.json()
             if not data.get("id"):
                 raise RuntimeError(f"No chat ID returned from Secoda AI: {data}")
             return data
 
-        except requests.Timeout:
+        except requests.Timeout as exc:
             if attempt < max_attempts - 1:
                 continue
-            raise RuntimeError("Request timed out while submitting AI chat prompt.")
+            raise RuntimeError("Request timed out while submitting AI chat prompt.") from exc
         except requests.RequestException as exc:
             if attempt < max_attempts - 1:
                 continue
@@ -87,15 +89,15 @@ def _poll_for_completion(
     chat_id: str,
     poll_interval: float = 10.0,
     timeout: float = 360.0,
-) -> dict:
-    """
-    Poll GET /ai/embedded_prompt/{chat_id}/ until status is 'completed' or 'failed'.
+) -> dict[str, Any]:
+    """Poll GET /ai/embedded_prompt/{chat_id}/ until status is 'completed' or 'failed'.
 
     Returns:
         The completed response dict.
 
     Raises:
         RuntimeError: On failure status, timeout, or request error.
+
     """
     url = f"{EAPI_BASE_URL}/ai/embedded_prompt/{chat_id}/"
     headers = {
@@ -126,11 +128,9 @@ def _poll_for_completion(
                     detail = response.json()
                 except Exception:
                     detail = response.text
-                raise RuntimeError(
-                    f"Polling failed with status {response.status_code}: {detail}"
-                )
+                raise RuntimeError(f"Polling failed with status {response.status_code}: {detail}")
 
-            data = response.json()
+            data: dict[str, Any] = response.json()
             status = data.get("status")
 
             if status == "completed":
@@ -167,21 +167,27 @@ def ai_chat(
         Field(
             description=(
                 "Persona ID to use for the AI chat. "
-                "Leave blank to use the default persona."
+                "Defaults to the AI_PERSONA_ID environment variable if set, "
+                "otherwise the workspace default persona is used."
             )
         ),
-    ] = None,
+    ] = _DEFAULT_PERSONA_ID,
     poll_interval_seconds: Annotated[
         float,
-        Field(ge=1, description="Seconds between polling attempts while waiting for the AI to respond (default: 10)"),
+        Field(
+            ge=1,
+            description="Seconds between polling attempts while waiting for the AI to respond (default: 10)",
+        ),
     ] = 10.0,
     timeout_seconds: Annotated[
         float,
-        Field(ge=10, description="Maximum seconds to wait for the AI to complete the response (default: 360)"),
+        Field(
+            ge=10,
+            description="Maximum seconds to wait for the AI to complete the response (default: 360)",
+        ),
     ] = 360.0,
 ) -> str:
-    """
-    Start an AI chat session in Secoda and wait for the response.
+    """Start an AI chat session in Secoda and wait for the response.
 
     Submits a prompt to the Secoda embedded AI endpoint and polls until the
     response is complete. Returns the AI's response text along with the chat ID,
@@ -192,7 +198,7 @@ def ai_chat(
         parent: Chat ID of a previous conversation to continue (optional).
             Pass the chat_id from a previous ai_chat response to maintain context.
         persona_id: Persona ID to use for the AI chat (optional).
-            Leave blank to use the default persona.
+            Defaults to AI_PERSONA_ID env var if set, otherwise the workspace default persona.
         poll_interval_seconds: Seconds between polling attempts (default: 10).
         timeout_seconds: Maximum seconds to wait for completion (default: 360).
 
@@ -217,6 +223,7 @@ def ai_chat(
         - 403: Permission denied - check API token has AI chat permissions
         - 429: Rate limit exceeded - tool retries automatically
         - Timeout: Increase timeout_seconds if the AI takes longer than expected
+
     """
     try:
         submitted = _submit_prompt(prompt=prompt, parent=parent, persona_id=persona_id)
@@ -257,13 +264,13 @@ def ai_chat(
 # --------------------------------
 
 
-def register_tools(mcp):
+def register_tools(mcp: FastMCP) -> None:
     """Register AI chat tools with the MCP server."""
     mcp.tool(
-        annotations={
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": True,
-        }
+        annotations=ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=True,
+        )
     )(ai_chat)

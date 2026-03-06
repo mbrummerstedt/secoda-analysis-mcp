@@ -1,31 +1,49 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "secoda-mcp-analysis"
+name = "secoda-analysis-mcp"
 version = "0.1.0"
-description = "Secoda MCP Analysis Server - Read-only MCP server for business users"
+description = "Read-only MCP server for exploring and analysing a Secoda data catalog"
 readme = "README.md"
-requires-python = ">=3.8"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
 dependencies = [
-    "fastmcp>=0.1.0",
+    "mcp[cli]>=1.6.0",
     "requests>=2.28.0",
     "pydantic>=2.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "ruff>=0.1.0",
     "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
+    "responses>=0.25.0",
+    "ruff>=0.1.0",
     "mypy>=1.0.0",
+    "types-requests>=2.28.0",
+]
+
+[project.scripts]
+secoda-analysis = "secoda_analysis.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/secoda_analysis"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "integration: marks tests that hit the real Secoda API (requires API_TOKEN env var)",
 ]
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
-select = ["E", "F", "I", "N", "B", "W", "C", "D"]
-ignore = ["D100", "D104", "D107", "E501", "N812"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "B", "W", "C"]
+ignore = ["E501", "N812", "C901"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -33,7 +51,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

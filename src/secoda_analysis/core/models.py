@@ -2,21 +2,20 @@ from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-
 # --------------------------------
 # Filter and Sort Models for list_resources
 # --------------------------------
 
 
 class FieldFilterOperand(BaseModel):
-    """
-    Field-level filter operand for filtering resources by specific field values.
+    """Field-level filter operand for filtering resources by specific field values.
 
     Examples:
         - Exact match: {"operator": "exact", "field": "native_type", "value": "table"}
         - Contains: {"operator": "contains", "field": "title", "value": "customer"}
-        - In list: {"operator": "in", "field": "schema", "value": ["dbt_finance", "dbt_operations"]}
+        - In list: {"operator": "in", "field": "schema", "value": ["dbt_finance", "dbt_ops"]}
         - Is set: {"operator": "is_set", "field": "description", "value": None}
+
     """
 
     operator: Literal["exact", "contains", "in", "is_set"] = Field(
@@ -27,21 +26,17 @@ class FieldFilterOperand(BaseModel):
 
 
 class LogicalFilterOperand(BaseModel):
-    """
-    Logical filter operand for combining multiple filters with AND/OR/NOT logic.
+    """Logical filter operand for combining multiple filters with AND/OR/NOT logic.
 
     Examples:
         - AND: {"operator": "and", "operands": [operand1, operand2]}
         - OR: {"operator": "or", "operands": [operand1, operand2]}
         - NOT: {"operator": "not", "operands": [operand1]}
+
     """
 
-    operator: Literal["and", "or", "not"] = Field(
-        ..., description="Logical operator type"
-    )
-    operands: List["FilterOperand"] = Field(
-        ..., description="List of filter operands to combine"
-    )
+    operator: Literal["and", "or", "not"] = Field(..., description="Logical operator type")
+    operands: List["FilterOperand"] = Field(..., description="List of filter operands to combine")
 
 
 # Union type for filter operands (can be field or logical)
@@ -52,11 +47,11 @@ LogicalFilterOperand.model_rebuild()
 
 
 class SortTieBreaker(BaseModel):
-    """
-    Tie breaker configuration for sorting when primary sort field has equal values.
+    """Tie breaker configuration for sorting when primary sort field has equal values.
 
     Example:
         {"field": "created_at", "order": "desc"}
+
     """
 
     field: str = Field(..., description="Field name to use for tie breaking")
@@ -64,8 +59,7 @@ class SortTieBreaker(BaseModel):
 
 
 class SortConfig(BaseModel):
-    """
-    Sort configuration for ordering results.
+    """Sort configuration for ordering results.
 
     Examples:
         - Simple: {"field": "title", "order": "asc"}
@@ -74,6 +68,7 @@ class SortConfig(BaseModel):
             "order": "desc",
             "tie_breaker": {"field": "created_at", "order": "desc"}
           }
+
     """
 
     field: str = Field(..., description="Field name to sort by")

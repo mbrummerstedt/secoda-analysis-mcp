@@ -1,11 +1,11 @@
 import json
 from typing import Annotated, Optional
 
+from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
-from core.client import _make_request_with_retry, _truncate_response
-from core.config import API_TOKEN, API_URL
-
+from ..core.client import _make_request_with_retry, _truncate_response
+from ..core.config import API_TOKEN, API_URL
 
 # --------------------------------
 # Collection Read Tools
@@ -13,10 +13,12 @@ from core.config import API_TOKEN, API_URL
 
 
 def list_collections(
-    title: Annotated[Optional[str], Field(description="Filter collections by title (optional)")] = None,
-    page: Annotated[float, Field(ge=1, description="Page number for pagination")] = 1,
+    title: Annotated[
+        Optional[str], Field(description="Filter collections by title (optional)")
+    ] = None,
+    page: Annotated[int, Field(ge=1, description="Page number for pagination")] = 1,
     truncate_length: Annotated[
-        Optional[float], Field(ge=1, description="Maximum characters for text fields in results")
+        Optional[int], Field(ge=1, description="Maximum characters for text fields in results")
     ] = 150,
 ) -> str:
     """List all collections in the workspace.
@@ -35,13 +37,10 @@ def list_collections(
     Example:
         list_collections(title="Customer")
         list_collections(page=2)
-    """
-    page = int(page)
-    if truncate_length is not None:
-        truncate_length = int(truncate_length)
 
+    """
     api_url = API_URL if API_URL.endswith("/") else f"{API_URL}/"
-    query_params = {"page": page}
+    query_params: dict = {"page": page}
     if title is not None:
         query_params["title"] = title
 
@@ -58,11 +57,13 @@ def list_collections(
         return json.dumps(
             {"error": "Rate limit exceeded after 2 retries. Please wait before trying again."}
         )
-    elif response.status_code == 403:
+    if response.status_code == 403:
         return json.dumps(
-            {"error": "Permission denied. Check that your API token has permission to list collections."}
+            {
+                "error": "Permission denied. Check that your API token has permission to list collections."
+            }
         )
-    elif response.status_code >= 400:
+    if response.status_code >= 400:
         try:
             error_detail = response.json()
             return json.dumps({"error": f"Request failed: {error_detail}"})
@@ -82,7 +83,7 @@ def list_collections(
 def get_collection(
     collection_id: Annotated[str, Field(description="The unique identifier of the collection")],
     truncate_length: Annotated[
-        Optional[float], Field(ge=1, description="Maximum characters for text fields in results")
+        Optional[int], Field(ge=1, description="Maximum characters for text fields in results")
     ] = 150,
 ) -> str:
     """Retrieve a specific collection by its ID.
@@ -99,10 +100,8 @@ def get_collection(
 
     Example:
         get_collection(collection_id="collection-123")
-    """
-    if truncate_length is not None:
-        truncate_length = int(truncate_length)
 
+    """
     api_url = API_URL if API_URL.endswith("/") else f"{API_URL}/"
 
     response = _make_request_with_retry(
@@ -117,15 +116,17 @@ def get_collection(
         return json.dumps(
             {"error": "Rate limit exceeded after 2 retries. Please wait before trying again."}
         )
-    elif response.status_code == 404:
+    if response.status_code == 404:
         return json.dumps(
             {"error": f"Collection not found. The collection ID '{collection_id}' does not exist."}
         )
-    elif response.status_code == 403:
+    if response.status_code == 403:
         return json.dumps(
-            {"error": "Permission denied. Check that your API token has permission to access collections."}
+            {
+                "error": "Permission denied. Check that your API token has permission to access collections."
+            }
         )
-    elif response.status_code >= 400:
+    if response.status_code >= 400:
         try:
             error_detail = response.json()
             return json.dumps({"error": f"Request failed: {error_detail}"})
@@ -147,7 +148,7 @@ def get_collection(
 # --------------------------------
 
 
-def register_tools(mcp):
+def register_tools(mcp: FastMCP) -> None:
     """Register read-only collection tools with the MCP server."""
     mcp.tool()(list_collections)
     mcp.tool()(get_collection)
