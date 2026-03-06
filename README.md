@@ -54,6 +54,7 @@ The server is configured via environment variables:
 |----------|-------------|---------|
 | `API_TOKEN` | Your Secoda API token (required) | — |
 | `API_URL` | Secoda API base URL | `https://app.secoda.co/api/v1/` |
+| `INTEGRATION_ID` | Secoda integration ID for your data warehouse — default for `run_sql`. Find it in Secoda → Settings → Integrations → click your warehouse → copy the UUID from the URL. | — |
 
 Copy `.env.example` to `.env` and fill in your values:
 
@@ -81,7 +82,8 @@ Add to your `.cursor/mcp.json`:
       "args": ["/absolute/path/to/secoda-analysis-mcp-server/server.py"],
       "env": {
         "API_TOKEN": "your-secoda-api-token",
-        "API_URL": "https://app.secoda.co/api/v1/"
+        "API_URL": "https://app.secoda.co/api/v1/",
+        "INTEGRATION_ID": "your-warehouse-integration-id"
       }
     }
   }
@@ -99,7 +101,8 @@ Add to `claude_desktop_config.json`:
       "command": "python",
       "args": ["/absolute/path/to/secoda-analysis-mcp-server/server.py"],
       "env": {
-        "API_TOKEN": "your-secoda-api-token"
+        "API_TOKEN": "your-secoda-api-token",
+        "INTEGRATION_ID": "your-warehouse-integration-id"
       }
     }
   }

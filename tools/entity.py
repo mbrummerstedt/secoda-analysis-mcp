@@ -3,6 +3,7 @@ from typing import Annotated, Optional
 from pydantic import Field
 
 from core.client import call_tool
+from core.config import INTEGRATION_ID as _DEFAULT_INTEGRATION_ID
 
 
 # --------------------------------
@@ -12,7 +13,7 @@ from core.client import call_tool
 
 def run_sql(
     query: Annotated[str, Field(description="The SQL query to execute")],
-    integration_id: Annotated[str, Field(description="The Secoda integration ID for the data warehouse connection. Find this in your Secoda workspace under Settings > Integrations.")],
+    integration_id: Annotated[Optional[str], Field(description="The Secoda integration ID for the data warehouse connection. Defaults to the INTEGRATION_ID environment variable if set.")] = _DEFAULT_INTEGRATION_ID,
     truncate_length: Annotated[Optional[float], Field(ge=1, description="Maximum characters for text fields in results. Set to None for full numeric results")] = 150
 ) -> str:
     """
@@ -24,19 +25,12 @@ def run_sql(
     Args:
         query: The SQL query to execute
         integration_id: The Secoda integration ID for the warehouse connection.
-            Find this in your Secoda workspace under Settings > Integrations.
+            Defaults to the INTEGRATION_ID environment variable if set.
         truncate_length: Maximum characters for text fields in results (default: 150).
             Set to None for full numeric results.
 
     Returns:
         Query results with text fields truncated to specified length
-
-    Example:
-        run_sql(
-            query="SELECT created_date, COUNT(*) AS records FROM my_schema.my_table WHERE created_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) GROUP BY 1 ORDER BY 1 DESC LIMIT 7",
-            integration_id="your-integration-id-from-secoda",
-            truncate_length=None
-        )
     """
     # Convert float parameters to int
     if truncate_length is not None:
