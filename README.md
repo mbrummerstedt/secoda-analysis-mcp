@@ -2,8 +2,6 @@
 
 A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for exploring and analysing your [Secoda](https://www.secoda.co) data catalog. Designed for business users who need to discover data, look up metric definitions, run SQL queries, and understand data lineage — without any risk of modifying the catalog.
 
-Built to work alongside the [Power BI MCP server](https://github.com/microsoft/power-bi-mcp) for end-to-end data discovery across your warehouse and reports.
-
 ## Features
 
 - **Zero write access** — completely safe to use; nothing in Secoda can be changed
@@ -139,18 +137,6 @@ search_data_assets(query="my_important_table")
 
 # Then trace its lineage
 entity_lineage(entity_id="<id-from-search>")
-```
-
-### Combine with Power BI MCP
-```
-# 1. Get the metric definition from Secoda
-ai_chat(prompt="How is Average Order Value calculated?")
-
-# 2. Find the underlying table
-search_data_assets(query="fct_order_lines")
-
-# 3. Switch to Power BI MCP to find where it's used in reports
-#    list_workspaces → list_datasets → list_measures → execute_dax
 ```
 
 ## Finding your integration_id for run_sql
