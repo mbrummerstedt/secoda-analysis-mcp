@@ -22,16 +22,16 @@ classifiers = [
     "Topic :: Database",
     "Topic :: Software Development :: Libraries",
 ]
-
-[project.urls]
-Homepage = "https://github.com/mbrummerstedt/secoda-analysis-mcp-server"
-Repository = "https://github.com/mbrummerstedt/secoda-analysis-mcp-server"
-Issues = "https://github.com/mbrummerstedt/secoda-analysis-mcp-server/issues"
 dependencies = [
     "mcp[cli]>=1.6.0",
     "requests>=2.28.0",
     "pydantic>=2.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/mbrummerstedt/secoda-analysis-mcp-server"
+Repository = "https://github.com/mbrummerstedt/secoda-analysis-mcp-server"
+Issues = "https://github.com/mbrummerstedt/secoda-analysis-mcp-server/issues"
 
 [project.optional-dependencies]
 dev = [
