@@ -34,81 +34,24 @@ A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 
 - A Secoda account with API access
 - A Secoda API token (read permissions are sufficient)
 
-## Installation
+## Setup
 
-```bash
-pip install secoda-analysis-mcp
-```
+### 1. Get your Secoda API token
 
-Or with [uv](https://docs.astral.sh/uv/):
+Generate a token at **Secoda → Settings → API**. Read permissions are sufficient.
 
-```bash
-uvx secoda-analysis-mcp
-```
+### 2. Install with uvx (recommended)
 
-From source:
+No manual install needed — your MCP client runs the server automatically via [uvx](https://docs.astral.sh/uv/).
 
-```bash
-git clone https://github.com/mbrummerstedt/secoda-analysis-mcp.git
-cd secoda-analysis-mcp
-pip install .
-```
-
-## Configuration
-
-The server is configured via environment variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `API_TOKEN` | Your Secoda API token (required) | — |
-| `API_URL` | Secoda API base URL | `https://app.secoda.co/api/v1/` |
-| `AI_PERSONA_ID` | Secoda AI persona ID — pins a specific persona for all `ai_chat` calls. Find it in Secoda → Settings → AI → Personas. | workspace default |
-
-Copy `.env.example` to `.env` and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-## Usage
-
-### Run directly
-
-```bash
-API_TOKEN=your-token python -m secoda_analysis
-```
-
-### Cursor integration
-
-Add to your `.cursor/mcp.json`:
+**Claude Desktop** — add to `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "secoda-analysis": {
-      "command": "python",
-      "args": ["-m", "secoda_analysis"],
-      "cwd": "/absolute/path/to/secoda-analysis-mcp",
-      "env": {
-        "API_TOKEN": "your-secoda-api-token",
-        "API_URL": "https://app.secoda.co/api/v1/"
-      }
-    }
-  }
-}
-```
-
-### Claude Desktop integration
-
-Add to `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "secoda-analysis": {
-      "command": "python",
-      "args": ["-m", "secoda_analysis"],
-      "cwd": "/absolute/path/to/secoda-analysis-mcp",
+      "command": "uvx",
+      "args": ["secoda-analysis-mcp"],
       "env": {
         "API_TOKEN": "your-secoda-api-token"
       }
@@ -116,6 +59,38 @@ Add to `claude_desktop_config.json`:
   }
 }
 ```
+
+**Cursor** — add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "secoda-analysis": {
+      "command": "uvx",
+      "args": ["secoda-analysis-mcp"],
+      "env": {
+        "API_TOKEN": "your-secoda-api-token"
+      }
+    }
+  }
+}
+```
+
+### 3. Alternative: pip install
+
+```bash
+pip install secoda-analysis-mcp
+```
+
+Then replace the `uvx` block above with `"command": "secoda-analysis-mcp"` and `"args": []`.
+
+### Configuration
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `API_TOKEN` | Your Secoda API token (required) | — |
+| `API_URL` | Secoda API base URL | `https://app.secoda.co/api/v1/` |
+| `AI_PERSONA_ID` | Secoda AI persona ID — pins a specific persona for all `ai_chat` calls. Find it in Secoda → Settings → AI → Personas. | workspace default |
 
 ## Example workflows
 
