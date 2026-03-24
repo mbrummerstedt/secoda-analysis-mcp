@@ -36,3 +36,9 @@ htmlcov/
 .vscode/
 *.swp
 *.swo
+
+# Bundle — org-specific manifest contains secrets; only template is tracked
+bundle/manifest.json
+
+# Built bundles contain baked-in secrets — never commit
+dist/

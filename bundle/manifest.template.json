@@ -1,0 +1,74 @@
+{
+  "manifest_version": "0.3",
+  "name": "secoda-analysis-mcp",
+  "display_name": "Secoda Data Catalog Analyst",
+  "version": "0.1.0",
+  "description": "Explore and analyse your Secoda data catalog with Claude. Search assets, browse lineage, query documentation, and chat with AI personas — read-only access to your full data catalog.",
+  "author": {
+    "name": "Martin Brummerstedt",
+    "url": "https://github.com/mbrummerstedt/secoda-analysis-mcp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mbrummerstedt/secoda-analysis-mcp"
+  },
+  "keywords": ["secoda", "data-catalog", "data-lineage", "analytics", "mcp"],
+  "license": "Apache-2.0",
+  "user_config": {
+    "api_token": {
+      "type": "string",
+      "title": "Secoda API Token",
+      "description": "Your Secoda API token. Find this in Secoda → Settings → API.",
+      "required": true,
+      "sensitive": true
+    },
+    "api_url": {
+      "type": "string",
+      "title": "Secoda API URL",
+      "description": "Your Secoda API base URL (e.g. https://eapi.secoda.co/api/v1/).",
+      "required": true,
+      "sensitive": false
+    },
+    "ai_persona_id": {
+      "type": "string",
+      "title": "AI Persona ID (optional)",
+      "description": "UUID of the Secoda AI persona to use for ai_chat queries. Leave blank to skip.",
+      "required": false,
+      "sensitive": false
+    }
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "mcp_config": {
+      "command": "uvx",
+      "args": ["secoda-analysis-mcp"],
+      "env": {
+        "API_TOKEN": "${user_config.api_token}",
+        "API_URL": "${user_config.api_url}",
+        "AI_PERSONA_ID": "${user_config.ai_persona_id}"
+      }
+    }
+  },
+  "tools": [
+    { "name": "search_data_assets",    "description": "Full-text search across all Secoda data assets" },
+    { "name": "get_resource",          "description": "Fetch a single resource by ID" },
+    { "name": "retrieve_entity",       "description": "Retrieve a Secoda entity with full metadata" },
+    { "name": "entity_lineage",        "description": "Upstream/downstream lineage for a data asset" },
+    { "name": "list_resources",        "description": "List resources by type (table, column, dashboard, etc.)" },
+    { "name": "list_collections",      "description": "List all collections in the catalog" },
+    { "name": "get_collection",        "description": "Get a collection with its members" },
+    { "name": "glossary",              "description": "Browse the business glossary" },
+    { "name": "list_questions",        "description": "List Q&A questions in the catalog" },
+    { "name": "get_question",          "description": "Get a specific question and its answers" },
+    { "name": "search_documentation",  "description": "Search catalog documentation" },
+    { "name": "ai_chat",               "description": "Chat with the Secoda AI persona" }
+  ],
+  "compatibility": {
+    "claude_desktop": ">=1.0.0",
+    "platforms": ["darwin", "win32"],
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  }
+}
