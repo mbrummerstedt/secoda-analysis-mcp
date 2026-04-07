@@ -86,7 +86,7 @@ Then replace the `uvx` block above with `"command": "secoda-analysis-mcp"` and `
 
 ### 4. Claude Desktop bundle (.mcpb) — for organisation-wide distribution
 
-A `.mcpb` (MCP Bundle) is a ZIP archive that Claude Desktop installs via drag-and-drop — no manual config editing required. The bundle auto-installs all Python dependencies on first run; the only prerequisite is Python 3.10+.
+A `.mcpb` (MCP Bundle) is a ZIP archive that Claude Desktop installs via drag-and-drop — no manual config editing required. The bundle auto-installs all Python dependencies on first run; the only prerequisite is Python 3.9+.
 
 Two manifests live in [`bundle/`](bundle/):
 
