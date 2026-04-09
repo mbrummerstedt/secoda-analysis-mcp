@@ -82,7 +82,7 @@ class TestCallTool:
         assert result.startswith("Error:")
 
     @responses_lib.activate
-    @patch("secoda_analysis.core.client.time.sleep")
+    @patch("secoda_analysis_mcp.core.client.time.sleep")
     def test_rate_limit_exhausted_returns_error_json(self, mock_sleep):
         for _ in range(3):
             responses_lib.add(responses_lib.POST, TOOL_URL, status=429)
@@ -138,7 +138,7 @@ class TestMakeResourceRequest:
         assert "Permission denied" in data["error"]
 
     @responses_lib.activate
-    @patch("secoda_analysis.core.client.time.sleep")
+    @patch("secoda_analysis_mcp.core.client.time.sleep")
     def test_rate_limit_exhausted_returns_error(self, mock_sleep):
         for _ in range(3):
             responses_lib.add(responses_lib.GET, RESOURCE_URL, status=429)

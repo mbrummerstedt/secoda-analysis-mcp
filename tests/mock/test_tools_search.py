@@ -61,7 +61,7 @@ class TestSearchDataAssets:
         assert body["name"] == "search_data_assets"
 
     @responses_lib.activate
-    @patch("secoda_analysis.core.client.time.sleep")
+    @patch("secoda_analysis_mcp.core.client.time.sleep")
     def test_rate_limit_returns_error(self, mock_sleep):
         for _ in range(3):
             responses_lib.add(responses_lib.POST, TOOL_URL, status=429)

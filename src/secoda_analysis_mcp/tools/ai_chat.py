@@ -147,7 +147,7 @@ def _poll_for_completion(
         time.sleep(poll_interval)
 
 
-class _RateLimited(Exception):
+class _RateLimitedError(Exception):
     """Raised by _single_poll when the server returns HTTP 429."""
 
 
@@ -159,7 +159,7 @@ def _single_poll(chat_id: str) -> Optional[dict[str, Any]]:
         None on requests.Timeout — caller should retry after a sleep.
 
     Raises:
-        _RateLimited: On HTTP 429 — caller should back off before retrying.
+        _RateLimitedError: On HTTP 429 — caller should back off before retrying.
         RuntimeError: On 404, other 4xx/5xx, or unrecoverable network error.
 
     """
@@ -172,7 +172,7 @@ def _single_poll(chat_id: str) -> Optional[dict[str, Any]]:
         response = requests.get(url, headers=headers, timeout=(30, 120))
 
         if response.status_code == 429:
-            raise _RateLimited()
+            raise _RateLimitedError()
 
         if response.status_code == 404:
             raise RuntimeError(f"Chat ID '{chat_id}' not found.")
@@ -184,11 +184,12 @@ def _single_poll(chat_id: str) -> Optional[dict[str, Any]]:
                 detail = response.text
             raise RuntimeError(f"Polling failed with status {response.status_code}: {detail}")
 
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
     except requests.Timeout:
         return None
-    except (_RateLimited, RuntimeError):
+    except (_RateLimitedError, RuntimeError):
         raise
     except requests.RequestException as exc:
         raise RuntimeError(f"Polling request failed: {exc}") from exc
@@ -307,7 +308,7 @@ async def ai_chat(
 
         try:
             data = await asyncio.to_thread(_single_poll, chat_id)
-        except _RateLimited:
+        except _RateLimitedError:
             await asyncio.sleep(60)
             continue
         except RuntimeError as exc:

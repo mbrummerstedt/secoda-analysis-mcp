@@ -18,16 +18,16 @@ def patch_config(monkeypatch):
     directly so the responses mocks always match.
     """
     targets = [
-        ("secoda_analysis.core.client", "API_URL", MOCK_API_URL),
-        ("secoda_analysis.core.client", "API_TOKEN", MOCK_TOKEN),
-        ("secoda_analysis.tools.ai_chat", "EAPI_BASE_URL", MOCK_EAPI_BASE_URL),
-        ("secoda_analysis.tools.ai_chat", "API_TOKEN", MOCK_TOKEN),
-        ("secoda_analysis.tools.resources", "API_URL", MOCK_API_URL),
-        ("secoda_analysis.tools.resources", "API_TOKEN", MOCK_TOKEN),
-        ("secoda_analysis.tools.questions", "API_URL", MOCK_API_URL),
-        ("secoda_analysis.tools.questions", "API_TOKEN", MOCK_TOKEN),
-        ("secoda_analysis.tools.collections", "API_URL", MOCK_API_URL),
-        ("secoda_analysis.tools.collections", "API_TOKEN", MOCK_TOKEN),
+        ("secoda_analysis_mcp.core.client", "API_URL", MOCK_API_URL),
+        ("secoda_analysis_mcp.core.client", "API_TOKEN", MOCK_TOKEN),
+        ("secoda_analysis_mcp.tools.ai_chat", "EAPI_BASE_URL", MOCK_EAPI_BASE_URL),
+        ("secoda_analysis_mcp.tools.ai_chat", "API_TOKEN", MOCK_TOKEN),
+        ("secoda_analysis_mcp.tools.resources", "API_URL", MOCK_API_URL),
+        ("secoda_analysis_mcp.tools.resources", "API_TOKEN", MOCK_TOKEN),
+        ("secoda_analysis_mcp.tools.questions", "API_URL", MOCK_API_URL),
+        ("secoda_analysis_mcp.tools.questions", "API_TOKEN", MOCK_TOKEN),
+        ("secoda_analysis_mcp.tools.collections", "API_URL", MOCK_API_URL),
+        ("secoda_analysis_mcp.tools.collections", "API_TOKEN", MOCK_TOKEN),
     ]
     for module, attr, value in targets:
         monkeypatch.setattr(f"{module}.{attr}", value)
