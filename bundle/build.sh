@@ -1,52 +1,52 @@
 #!/usr/bin/env bash
-# build.sh — builds the Miinto-specific .mcpb bundle
-# Requires: bundle/manifest.json (gitignored, contains org credentials)
-# Output:   dist/miinto-secoda-analyst.mcpb
+# Build dist/miinto-secoda-analyst.mcpb from bundle/ config + live source.
+# Always creates a fresh zip — no incremental updates, no stale pycache.
 #
-# The .mcpb is a zip with manifest.json at the root. For uv server type,
-# we include pyproject.toml and the source package so the host can run
-# `uv run python -m secoda_analysis_mcp.server` directly.
-
+# Prerequisites:
+#   - bundle/manifest.json must exist and contain no placeholder values
+#   - python3
 set -euo pipefail
 
-BUNDLE_DIR="$(cd "$(dirname "$0")" && pwd)"
+BUNDLE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$BUNDLE_DIR")"
-DIST_DIR="$REPO_ROOT/dist"
-OUTPUT="$DIST_DIR/miinto-secoda-analyst.mcpb"
-STAGING="$REPO_ROOT/.bundle-staging"
 
-if [ ! -f "$BUNDLE_DIR/manifest.json" ]; then
+if [[ ! -f "$BUNDLE_DIR/manifest.json" ]]; then
   echo "Error: bundle/manifest.json not found."
-  echo "Copy bundle/manifest.template.json to bundle/manifest.json and fill in your org credentials."
+  echo "  cp bundle/manifest.template.json bundle/manifest.json"
+  echo "  # then fill in your org credentials"
   exit 1
 fi
 
-mkdir -p "$DIST_DIR"
+python3 - <<EOF
+import zipfile, pathlib, json, sys
 
-# Stage files with the flat structure the host expects
-rm -rf "$STAGING"
-mkdir -p "$STAGING"
+bundle = pathlib.Path("$BUNDLE_DIR")
+repo   = pathlib.Path("$REPO_ROOT")
 
-cp "$BUNDLE_DIR/manifest.json" "$STAGING/"
-cp "$REPO_ROOT/pyproject.toml" "$STAGING/"
-cp -r "$REPO_ROOT/src/secoda_analysis_mcp" "$STAGING/secoda_analysis_mcp"
-cp -r "$BUNDLE_DIR/server" "$STAGING/server"
-[ -f "$BUNDLE_DIR/README.md" ] && cp "$BUNDLE_DIR/README.md" "$STAGING/"
+manifest = json.loads((bundle / "manifest.json").read_text())
+name     = manifest["name"]
+out      = repo / "dist" / f"{name}.mcpb"
+out.parent.mkdir(parents=True, exist_ok=True)
 
-# Strip compiled bytecode before zipping
-find "$STAGING" -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+config_files = ["manifest.json", "pyproject.toml", ".python-version"]
+missing = [f for f in config_files if not (bundle / f).exists()]
+if missing:
+    sys.exit(f"Missing bundle/ files: {missing}")
 
-cd "$STAGING"
-find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-zip -r "$OUTPUT" .
+# Package source is in src/secoda_analysis_mcp — bundle as secoda_analysis_mcp/
+src_pkg = repo / "src" / "secoda_analysis_mcp"
 
-rm -rf "$STAGING"
+with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+    for f in config_files:
+        z.write(bundle / f, f)
+    for p in sorted(src_pkg.rglob("*")):
+        if "__pycache__" in p.parts or p.suffix == ".pyc":
+            continue
+        # Strip src/ prefix: src/secoda_analysis_mcp/x.py → secoda_analysis_mcp/x.py
+        z.write(p, p.relative_to(repo / "src"))
 
-echo ""
-echo "Bundle created: $OUTPUT"
-echo ""
-echo "To install:"
-echo "  1. Open Claude Desktop → Settings → Developer"
-echo "  2. Drag and drop $OUTPUT onto the window"
-echo "  OR"
-echo "  3. Share $OUTPUT with colleagues — they drag and drop it the same way"
+names = zipfile.ZipFile(out).namelist()
+print(f"Built {out} ({len(names)} files)")
+for n in names:
+    print(f"  {n}")
+EOF
