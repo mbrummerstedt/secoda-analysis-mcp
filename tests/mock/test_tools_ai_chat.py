@@ -7,8 +7,8 @@ import pytest
 import responses as responses_lib
 
 from secoda_analysis_mcp.tools.ai_chat import (
-    _RateLimited,
     _poll_for_completion,
+    _RateLimitedError,
     _single_poll,
     _submit_prompt,
     ai_chat,
@@ -66,7 +66,7 @@ class TestSubmitPrompt:
             _submit_prompt(prompt="Hello")
 
     @responses_lib.activate
-    @patch("secoda_analysis.tools.ai_chat.time.sleep")
+    @patch("secoda_analysis_mcp.tools.ai_chat.time.sleep")
     def test_rate_limit_exhausted_raises_runtime_error(self, mock_sleep):
         for _ in range(3):
             responses_lib.add(responses_lib.POST, SUBMIT_URL, status=429)
@@ -140,7 +140,7 @@ class TestSinglePoll:
     @responses_lib.activate
     def test_raises_rate_limited_on_429(self):
         responses_lib.add(responses_lib.GET, POLL_URL, status=429)
-        with pytest.raises(_RateLimited):
+        with pytest.raises(_RateLimitedError):
             _single_poll("chat-abc123")
 
     @responses_lib.activate
@@ -215,9 +215,7 @@ class TestAiChat:
             responses_lib.GET, POLL_URL, json={"id": "chat-abc123", "status": "pending"}, status=200
         )
         responses_lib.add(responses_lib.GET, POLL_URL, json=ai_chat_completed_response, status=200)
-        await ai_chat(
-            prompt="Hello", ctx=mock_ctx, poll_interval_seconds=0.01, timeout_seconds=5.0
-        )
+        await ai_chat(prompt="Hello", ctx=mock_ctx, poll_interval_seconds=0.01, timeout_seconds=5.0)
         assert mock_ctx.report_progress.call_count >= 2
         call_kwargs = mock_ctx.report_progress.call_args_list[0].kwargs
         assert "progress" in call_kwargs
@@ -231,7 +229,7 @@ class TestAiChat:
         responses_lib.add(responses_lib.POST, SUBMIT_URL, json=ai_chat_submit_response, status=200)
         responses_lib.add(responses_lib.GET, POLL_URL, status=429)
         responses_lib.add(responses_lib.GET, POLL_URL, json=ai_chat_completed_response, status=200)
-        with patch("secoda_analysis.tools.ai_chat.asyncio.sleep") as mock_sleep:
+        with patch("secoda_analysis_mcp.tools.ai_chat.asyncio.sleep") as mock_sleep:
             mock_sleep.return_value = None
             result = await ai_chat(
                 prompt="Hello", ctx=mock_ctx, poll_interval_seconds=0.01, timeout_seconds=5.0
