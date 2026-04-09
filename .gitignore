@@ -32,6 +32,9 @@ htmlcov/
 # Linting
 .ruff_cache/
 
+# OS
+.DS_Store
+
 # IDE
 .idea/
 .vscode/
